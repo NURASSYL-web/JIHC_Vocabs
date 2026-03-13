@@ -492,6 +492,9 @@ class AppController extends ChangeNotifier {
   void _restoreState() {
     final state = _storage.loadState();
     _language = _parseLanguage(state['language']) ?? AppLanguage.ru;
+    _groupAssignments
+      ..clear()
+      ..addAll(_deserializeAssignments(state['groupAssignments']));
 
     final rawAccounts = state['accounts'];
     if (rawAccounts is Map) {
@@ -502,6 +505,10 @@ class AppController extends ChangeNotifier {
           _accounts[key] = Map<String, dynamic>.from(value);
         }
       }
+    }
+
+    if (_groupAssignments.isEmpty) {
+      _groupAssignments.addAll(_collectAssignmentsFromAccounts());
     }
 
     final activeEmail = state['activeEmail'];
@@ -543,9 +550,6 @@ class AppController extends ChangeNotifier {
     _customWords
       ..clear()
       ..addAll(_deserializeCustomWords(account['customWords']));
-    _groupAssignments
-      ..clear()
-      ..addAll(_deserializeAssignments(account['groupAssignments']));
   }
 
   void _saveCurrentAccount() {
@@ -587,6 +591,7 @@ class AppController extends ChangeNotifier {
     _storage.saveState(<String, dynamic>{
       'language': _language.name,
       'activeEmail': _activeEmail,
+      'groupAssignments': _serializeAssignments(),
       'accounts': _accounts,
     });
   }
@@ -717,6 +722,21 @@ class AppController extends ChangeNotifier {
             DateTime.tryParse(value['createdAt'] as String? ?? '') ??
             DateTime.now(),
       );
+    }
+    return result;
+  }
+
+  Map<String, GroupUnitAssignment> _collectAssignmentsFromAccounts() {
+    final result = <String, GroupUnitAssignment>{};
+    for (final account in _accounts.values) {
+      final assignments = _deserializeAssignments(account['groupAssignments']);
+      for (final entry in assignments.entries) {
+        final current = result[entry.key];
+        if (current == null ||
+            entry.value.createdAt.isAfter(current.createdAt)) {
+          result[entry.key] = entry.value;
+        }
+      }
     }
     return result;
   }
