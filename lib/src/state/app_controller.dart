@@ -45,8 +45,8 @@ class AppController extends ChangeNotifier {
   List<CustomWordNote> get customWords => List.unmodifiable(_customWords);
   bool get isTeacher => _user?.role == UserRole.teacher;
   GroupUnitAssignment? get currentGroupAssignment {
-    final groupCode = _user?.groupCode;
-    if (groupCode == null) return null;
+    final groupCode = _normalizeGroupCode(_user?.groupCode);
+    if (groupCode.isEmpty) return null;
     return _groupAssignments[groupCode];
   }
   GroupUnitAssignment? get latestAssignment {
@@ -134,7 +134,7 @@ class AppController extends ChangeNotifier {
       firstName: firstName,
       lastName: lastName,
       role: role,
-      groupCode: groupCode,
+      groupCode: _normalizeGroupCode(groupCode),
       bookId: bookId,
     );
     _xp = 0;
@@ -403,14 +403,15 @@ class AppController extends ChangeNotifier {
     required String unitId,
     required String deadline,
   }) {
+    final normalizedGroupCode = _normalizeGroupCode(groupCode);
     final assignedBook = books.firstWhere(
       (book) => book.units.any((unit) => unit.id == unitId),
     );
     final assignedUnit = assignedBook.units.firstWhere(
       (unit) => unit.id == unitId,
     );
-    _groupAssignments[groupCode] = GroupUnitAssignment(
-      groupCode: groupCode,
+    _groupAssignments[normalizedGroupCode] = GroupUnitAssignment(
+      groupCode: normalizedGroupCode,
       unitId: assignedUnit.id,
       unitTitle: assignedUnit.title,
       bookId: assignedBook.id,
@@ -530,7 +531,7 @@ class AppController extends ChangeNotifier {
       firstName: profile['firstName'] as String? ?? 'Студент',
       lastName: profile['lastName'] as String? ?? 'Solutions',
       role: _parseRole(profile['role']) ?? UserRole.student,
-      groupCode: profile['groupCode'] as String? ?? '1f1',
+      groupCode: _normalizeGroupCode(profile['groupCode'] as String? ?? '1f1'),
       bookId: profile['bookId'] as String? ?? books.first.id,
       dailyGoal: profile['dailyGoal'] as int? ?? 10,
     );
@@ -712,7 +713,7 @@ class AppController extends ChangeNotifier {
       final value = entry.value;
       if (key is! String || value is! Map) continue;
       result[key] = GroupUnitAssignment(
-        groupCode: value['groupCode'] as String? ?? key,
+        groupCode: _normalizeGroupCode(value['groupCode'] as String? ?? key),
         unitId: value['unitId'] as String? ?? '',
         unitTitle: value['unitTitle'] as String? ?? 'Unit',
         bookId: value['bookId'] as String? ?? books.first.id,
@@ -724,6 +725,10 @@ class AppController extends ChangeNotifier {
       );
     }
     return result;
+  }
+
+  static String _normalizeGroupCode(String? value) {
+    return (value ?? '').trim().toLowerCase();
   }
 
   Map<String, GroupUnitAssignment> _collectAssignmentsFromAccounts() {

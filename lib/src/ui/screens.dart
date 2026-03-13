@@ -1212,7 +1212,7 @@ class _HomeTabState extends State<HomeTab> {
                       child: Text(tr(context, 'continue_learning')),
                     ),
                   ),
-                  if (assignedUnit != null) ...[
+                  if (!controller.isTeacher) ...[
                     const SizedBox(height: 12),
                     Container(
                       padding: const EdgeInsets.all(14),
@@ -1236,9 +1236,9 @@ class _HomeTabState extends State<HomeTab> {
                                 Text(
                                   tx(
                                     context,
-                                    ru: 'Назначение для группы ${user.groupCode}',
-                                    kz: '${user.groupCode} тобына тапсырма',
-                                    en: 'Assignment for group ${user.groupCode}',
+                                    ru: 'Задание от преподавателя',
+                                    kz: 'Оқытушы тапсырмасы',
+                                    en: 'Teacher assignment',
                                   ),
                                   style: TextStyle(
                                     color: palette.textPrimary,
@@ -1246,19 +1246,59 @@ class _HomeTabState extends State<HomeTab> {
                                   ),
                                 ),
                                 const SizedBox(height: 4),
-                                Text(
-                                  assignedUnit.unitTitle,
-                                  style: TextStyle(color: palette.textPrimary),
-                                ),
-                                Text(
-                                  tx(
-                                    context,
-                                    ru: 'Дедлайн: ${assignedUnit.deadline}',
-                                    kz: 'Соңғы күн: ${assignedUnit.deadline}',
-                                    en: 'Deadline: ${assignedUnit.deadline}',
+                                if (assignedUnit != null) ...[
+                                  Text(
+                                    tx(
+                                      context,
+                                      ru: 'Группа ${user.groupCode}',
+                                      kz: '${user.groupCode} тобы',
+                                      en: 'Group ${user.groupCode}',
+                                    ),
+                                    style: TextStyle(
+                                      color: palette.textSecondary,
+                                      fontWeight: FontWeight.w600,
+                                    ),
                                   ),
-                                  style: TextStyle(color: palette.textSecondary),
-                                ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    assignedUnit.unitTitle,
+                                    style: TextStyle(
+                                      color: palette.textPrimary,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    tx(
+                                      context,
+                                      ru:
+                                          'Дедлайн: ${assignedUnit.deadline}\nНазначил: ${assignedUnit.assignedBy}',
+                                      kz:
+                                          'Соңғы күн: ${assignedUnit.deadline}\nТағайындаған: ${assignedUnit.assignedBy}',
+                                      en:
+                                          'Deadline: ${assignedUnit.deadline}\nAssigned by: ${assignedUnit.assignedBy}',
+                                    ),
+                                    style: TextStyle(
+                                      color: palette.textSecondary,
+                                    ),
+                                  ),
+                                ] else
+                                  Text(
+                                    tx(
+                                      context,
+                                      ru:
+                                          'Пока нет активного задания для группы ${user.groupCode}. После назначения unit он появится здесь.',
+                                      kz:
+                                          '${user.groupCode} тобы үшін әзірше белсенді тапсырма жоқ. Unit тағайындалғаннан кейін осы жерде көрінеді.',
+                                      en:
+                                          'There is no active assignment for group ${user.groupCode} yet. It will appear here after the teacher assigns a unit.',
+                                    ),
+                                    style: TextStyle(
+                                      color: palette.textSecondary,
+                                      height: 1.35,
+                                    ),
+                                  ),
                               ],
                             ),
                           ),
